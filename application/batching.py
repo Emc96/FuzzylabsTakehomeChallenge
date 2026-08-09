@@ -66,21 +66,21 @@ class BatchingTranslator:
         if self.worker_task:
             self.worker_task.cancel()
 
-            try: 
+            try:
                 await self.worker_task
-            # need to catch the cancelled worker error when a worker is cancelled or it stops the 
+            # need to catch the cancelled worker error when a worker is cancelled or it stops the
             # app dead
             except asyncio.CancelledError:
-                pass 
+                pass
 
     async def worker_loop(self):
         """
         This is just running constantly in the background picking up new requests and
-        processing them, this is a coroutine. 
-        Collects batches and then passes them on for processing 
+        processing them, this is a coroutine.
+        Collects batches and then passes them on for processing
         """
         while True:
-            batch = self.collect_batch()
+            batch = await self.collect_batch()
             await self.process_batch(batch)
 
     async def submit(self, text: str, source_lang: str, target_lang: str) -> str:
@@ -120,7 +120,7 @@ class BatchingTranslator:
             list[TranslationJob]: _description_
         """
         # wait for the queue to be filled with a first request, no point working without one
-        # if nothing there hand control back to event loop to get one. Submit fills the queue. 
+        # if nothing there hand control back to event loop to get one. Submit fills the queue.
         first = await self.queue.get()
 
         batch = [first]
@@ -176,25 +176,20 @@ class BatchingTranslator:
                 # await releases the event thread to go back and handle new requests until this
                 # is complete.
                 results = await loop.run_in_executor(
-                    None, 
-                    translation.translate_batch, 
-                    texts, 
-                    src, 
-                    tgt
+                    None, translation.translate_batch, texts, src, tgt
                 )
                 # for each job get the correct result/translated text and update future
                 for job, result in zip(jobs, results):
                     if not job.future.done():
                         # the future internal state is set to finished,
-                        # submit method can now continue, translation is placed in the futures of the 
+                        # submit method can now continue, translation is placed in the futures of the
                         # translation job object
                         job.future.set_result(result)
-
 
             except Exception as e:
                 logger.exception("Batch translation failed for %s->%s", src, tgt)
                 for job in jobs:
-                    # if there is an error on the translation job update the future so 
-                    # app can still run 
+                    # if there is an error on the translation job update the future so
+                    # app can still run
                     if not job.future.done():
                         job.future.set_exception(e)

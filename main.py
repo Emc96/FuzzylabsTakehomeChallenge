@@ -10,6 +10,7 @@ from .application.batching import BatchingTranslator
 from .application.config import NLLB_LANG_MAP
 from .application.guardrails import validate_text
 
+
 logging.basicConfig(
     format="%(asctime)s -  %(levelname)s : %(message)s",
     datefmt="%m/%d/%Y %I:%M:%S %p",
@@ -46,9 +47,6 @@ class LanguagesResponse(BaseModel):
     supported_languages: dict[str, str]
 
 
-global_batcher = BatchingTranslator()
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -63,12 +61,16 @@ async def lifespan(app: FastAPI):
     translation.warm_up()
 
     # event loop has the worker loop attached to it here, runs constantly in the background
-    await global_batcher.start()
+    # attach the translation logic to the app instance event loop.
+    # the queue is then attached to this instance and if other apps are created they won't conflict
+    # Also won't encounter that hang up bug where the app can't shutdown correctly
+    app.state.batcher = BatchingTranslator()
+    await app.state.batcher.start()
     # function then releases control of the server completely to fastapi until shutdown
     yield
     # only when the server is shutdown does this command run, new requests are refused and catches shutdown
     # errors so it fails sensibly
-    await global_batcher.stop()
+    await app.state.batcher.stop()
 
 
 app = FastAPI(
@@ -118,8 +120,8 @@ async def translate_endpoint(
         )
 
     start_time = time.perf_counter()
-
-    translated_text = await global_batcher.submit(
+    # submit the text to be translated here and let the tranlsation logic manage the queue and batching
+    translated_text = await request.app.state.batcher.submit(
         trans_request.text, trans_request.source_lang, trans_request.target_lan
     )
 
