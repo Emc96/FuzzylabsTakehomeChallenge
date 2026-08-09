@@ -83,7 +83,7 @@ class BatchingTranslator:
             batch = self.collect_batch()
             await self.process_batch(batch)
 
-    async def submit(self, text: str, source_lang: str, target_lang: str):
+    async def submit(self, text: str, source_lang: str, target_lang: str) -> str:
         """
         New requests from the API are submitted to the translation layer through this method.
         It uses the TranslationJob dataclass to create translation objects and then adds them
@@ -107,6 +107,7 @@ class BatchingTranslator:
         await self.queue.put(TranslationJob(text, source_lang, target_lang, job_future))
         # once the process batch method has completed the specific request the job future is released
         # the event loop can pick it up and delvier the results back to the endpoint
+        # this job future is what holds the actual translation result. It's all the info the endpoint needs
         return await job_future
 
     async def collect_batch(self) -> list[TranslationJob]:
@@ -119,7 +120,7 @@ class BatchingTranslator:
             list[TranslationJob]: _description_
         """
         # wait for the queue to be filled with a first request, no point working without one
-        # if nothing there hand control back to event loop to get one
+        # if nothing there hand control back to event loop to get one. Submit fills the queue. 
         first = await self.queue.get()
 
         batch = [first]
@@ -181,7 +182,7 @@ class BatchingTranslator:
                     src, 
                     tgt
                 )
-
+                # for each job get the correct result/translated text and update future
                 for job, result in zip(jobs, results):
                     if not job.future.done():
                         # the future internal state is set to finished,
