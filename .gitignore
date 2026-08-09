@@ -5,3 +5,8 @@ application/__pycache__/translation.cpython-313.pyc
 __pycache__/main.cpython-313.pyc
 __pycache__/__init__.cpython-313.pyc
 TranslationLLM.log
+evaluate/__pycache__/__init__.cpython-313.pyc
+evaluate/__pycache__/evaluation.cpython-313.pyc
+__pycache__/test_guardrails.cpython-313-pytest-9.1.1.pyc
+.gitignore
+application/__pycache__/__init__.cpython-313.pyc

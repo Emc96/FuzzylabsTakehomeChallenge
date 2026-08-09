@@ -1,0 +1,6 @@
+{"source": "Good morning, how are you today?", "source_lang": "en", "target_lang": "fr", "reference": "Bonjour, comment allez-vous aujourd'hui ?"}
+{"source": "The weather is nice this afternoon.", "source_lang": "en", "target_lang": "fr", "reference": "Il fait beau cet après-midi."}
+{"source": "Can you help me find the train station?", "source_lang": "en", "target_lang": "de", "reference": "Können Sie mir helfen, den Bahnhof zu finden?"}
+{"source": "I would like a coffee, please.", "source_lang": "en", "target_lang": "de", "reference": "Ich hätte gerne einen Kaffee, bitte."}
+{"source": "Where is the nearest pharmacy?", "source_lang": "en", "target_lang": "es", "reference": "¿Dónde está la farmacia más cercana?"}
+{"source": "This book is very interesting.", "source_lang": "en", "target_lang": "es", "reference": "Este libro es muy interesante."}
