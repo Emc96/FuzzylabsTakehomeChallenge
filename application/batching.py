@@ -46,24 +46,42 @@ class BatchingTranslator:
         # create the request queue here, hint at what objects will fill the queue too
         self.queue: asyncio.Queue[TranslationJob] = asyncio.Queue
         # going to wrap the coroutine worker into the python event loop. This allows python/server
-        # to check if the current coroutinte is running, pending, done or cancelled.
+        # to check if the current coroutine is running, pending, done or cancelled.
         # this will be created in a method
         self.worker_task: asyncio.Task | None = None
 
-    async def worker_loop(self):
+    async def start(self):
+        """
+        Registering the worker task (coroutine) to the event loop
+        Runs concurrently, need to have a reference to the worker or it can't be controlled
+        """
 
+        self.worker_task = asyncio.create_task(self.worker_loop())
+
+    async def stop(self):
+        """
+        Since the worker loop is saved to worker_task can use it to cancel/stop the coroutine.
+        """
+
+        if self.worker_task:
+            self.worker_task.cancel()
+
+            try: 
+                await self.worker_task
+            # need to catch the cancelled worker error when a worker is cancelled or it stops the 
+            # app dead
+            except asyncio.CancelledError:
+                pass 
+
+    async def worker_loop(self):
+        """
+        This is just running constantly in the background picking up new requests and
+        processing them, this is a coroutine. 
+        Collects batches and then passes them on for processing 
+        """
         while True:
             batch = self.collect_batch()
             await self.process_batch(batch)
-
-    async def start(self):
-        """ """
-        # need to create worker loop for get batches and executing them
-        self.worker_task = asyncio.create_task()
-
-    async def stop(self):
-
-        return
 
     async def submit(self, text: str, source_lang: str, target_lang: str):
         """
@@ -149,7 +167,7 @@ class BatchingTranslator:
         loop = asyncio.get_running_loop()
 
         for (src, tgt), jobs in groups.items():
-
+            # create a batch of texts to be translated in one go
             texts = [translate_job.text for translate_job in jobs]
 
             try:
