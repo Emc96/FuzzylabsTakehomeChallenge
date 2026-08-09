@@ -70,15 +70,15 @@ Adding a language is one line, no retraining or new model, or adding a new model
 A small held-out test set scored with BLEU (`sacrebleu`). Designed to run in CI on every model/config change (fail the build below a threshold) and periodically against sampled production traffic to catch drift. The bundled test set is deliberately tiny (6 sentences) as a demonstration.  Production would use something like the FLORES-200 (https://huggingface.co/datasets/Muennighoff/flores200) for broader coverage per language pair. 
 
 **3. Concurrent calls**: `application/batching.py`. Two things are needed to
-handle concurrent requests well: (a) inference must not block the event
-loop, and (b) ideally concurrent requests are batched for GPU/CPU
+handle concurrent requests well: inference must not block the event
+loop, and ideally concurrent requests are batched for GPU/CPU
 efficiency rather than processed one at a time. `BatchingTranslator` does
 both requests are queued, grouped by language pair within a short
 window (default 50ms or 8 requests, whichever comes first), and run
 through the model in a single `generate()` call. Managing latency and resource utilisaiton.  
 
 **6. Guarding against inappropriate input/output**: 
-`application/guardrails.py`, applied to both the incoming text and the model's output. Small example of what can be done (length limit + keyword patterns). see Limitations for the production version of this.
+`application/guardrails.py`, applied to both the incoming text and the model's output. Small example of what can be done (length limit + keyword patterns).
 ## Running it
 ### Using uv
 If you have uv installed then you can use uv to easily recreate the environment, running: 
