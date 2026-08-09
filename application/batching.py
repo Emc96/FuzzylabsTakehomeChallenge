@@ -44,7 +44,7 @@ class BatchingTranslator:
         self.max_batch_size = max_batch_size
         self.max_wait_ms = max_wait_ms
         # create the request queue here, hint at what objects will fill the queue too
-        self.queue: asyncio.Queue[TranslationJob] = asyncio.Queue
+        self.queue: asyncio.Queue[TranslationJob] = asyncio.Queue()
         # going to wrap the coroutine worker into the python event loop. This allows python/server
         # to check if the current coroutine is running, pending, done or cancelled.
         # this will be created in a method

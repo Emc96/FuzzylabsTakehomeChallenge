@@ -10,7 +10,7 @@ import logging
 
 from .config import MODEL_NAME, NLLB_LANG_MAP
 
-logger = logging.get(__name__)
+logger = logging.getLogger(__name__)
 
 tokeniser = None
 model = None
